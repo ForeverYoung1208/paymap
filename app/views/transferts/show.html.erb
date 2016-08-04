@@ -1,0 +1,19 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <strong>Filename:</strong>
+  <%= @transfert.filename %>
+</p>
+
+<p>
+  <strong>Baz dot:</strong>
+  <%= @transfert.baz_dot %>
+</p>
+
+<p>
+  <strong>Rev dot:</strong>
+  <%= @transfert.rev_dot %>
+</p>
+
+<%= link_to 'Edit', edit_transfert_path(@transfert) %> |
+<%= link_to 'Back', transferts_path %>

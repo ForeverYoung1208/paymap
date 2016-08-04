@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  filename: MyString
+  baz_dot: 9.99
+  rev_dot: 9.99
+
+two:
+  filename: MyString
+  baz_dot: 9.99
+  rev_dot: 9.99

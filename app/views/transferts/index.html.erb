@@ -1,0 +1,31 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Listing Transferts</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Filename</th>
+      <th>Baz dot</th>
+      <th>Rev dot</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @transferts.each do |transfert| %>
+      <tr>
+        <td><%= transfert.filename %></td>
+        <td><%= transfert.baz_dot %></td>
+        <td><%= transfert.rev_dot %></td>
+        <td><%= link_to 'Show', transfert %></td>
+        <td><%= link_to 'Edit', edit_transfert_path(transfert) %></td>
+        <td><%= link_to 'Destroy', transfert, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Transfert', new_transfert_path %>

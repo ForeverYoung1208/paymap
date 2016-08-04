@@ -1,0 +1,29 @@
+<%= form_for(@transfert) do |f| %>
+  <% if @transfert.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@transfert.errors.count, "error") %> prohibited this transfert from being saved:</h2>
+
+      <ul>
+      <% @transfert.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :filename %><br>
+    <%= f.text_field :filename %>
+  </div>
+  <div class="field">
+    <%= f.label :baz_dot %><br>
+    <%= f.text_field :baz_dot %>
+  </div>
+  <div class="field">
+    <%= f.label :rev_dot %><br>
+    <%= f.text_field :rev_dot %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

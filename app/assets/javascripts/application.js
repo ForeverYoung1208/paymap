@@ -13,4 +13,10 @@
 //= require jquery
 //= require jquery_ujs
 //= require turbolinks
-//= require_tree .
+//= require angular/angular.min
+//= require angular-resource/angular-resource
+//= require transferts
+//= require map
+
+
+// =require_tree .

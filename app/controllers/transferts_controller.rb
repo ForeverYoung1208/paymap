@@ -7,6 +7,10 @@ class TransfertsController < ApplicationController
     @transferts = Transfert.all
   end
 
+  def map
+    
+  end
+
   # GET /transferts/1
   # GET /transferts/1.json
   def show

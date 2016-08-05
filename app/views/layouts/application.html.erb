@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Paymap</title>
+  <%= javascript_include_tag 'https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js' %>
+  <%= stylesheet_link_tag 'https://api.tiles.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' %>
+
   <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
   <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
   <%= csrf_meta_tags %>

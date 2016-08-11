@@ -4,7 +4,7 @@ class TransfertsController < ApplicationController
   # GET /transferts
   # GET /transferts.json
   def index
-    @transferts = Transfert.all
+    @transferts = Transfert.all[145..146]
   end
 
   def map

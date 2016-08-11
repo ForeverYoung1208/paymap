@@ -3,57 +3,65 @@
 destination = [-77.032, 38.913]
 
 $.get('/transferts.json', {dataType: 'json'}, (data)->
-	flows = data[145...160]
+	flows_data = data
 
 	# //Kyiv
 	# 50°27′N 	30°31′E
 	kyiv = [30.445, 50.5166]
 
-	flows_as_data = 
+	flows = 
 		"type": "FeatureCollection",
 		"features": []
-	points_as_data =
+	points =
 		"type": "FeatureCollection",
 		"features": []		
 
-	for flow in flows
-		flows_as_data.features.push {
+
+	max_dist = 0
+	max_value = 0
+
+	# create points and flows
+
+	for flow_data in flows_data
+		x = flow_data.origin.slice(0)
+		y = flow_data.destination.slice(0)
+		flows.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "LineString",
-				"coordinates": [
-						flow.origin,
-						flow.destination
-				]
+				"coordinates": [ x, y ]
 			}
 		}
 
-		d_x = (flow.origin[0]-flow.destination[0])/(flow.value)
-		d_y = (flow.origin[1]-flow.destination[1])/(flow.value)
+		dist = (flow_data.destination[0]-flow_data.origin[0]) + (flow_data.destination[0]-flow_data.origin[0])
+		max_dist = dist if dist > max_dist
+		max_value = flow_data.value if flow_data.value > max_value
+		f_o = flow_data.origin.slice(0)
 
-		points_as_data.features.push {
+		points.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "Point",
-				coordinates: flow.origin,
-				on_flow: flow,
-				delta_x: d_x,
-				delta_y: d_y
+				coordinates: f_o,
+				on_flow: flow_data,
+				dist: dist,
+				delta_x: 0,
+				delta_y: 0
 			}
 		}
 
-	# calc_new_point_position = (padfs)->
-	# 	for padf in padfs
-	# 		delta_x=(padf.geometry.on_flow.origin[0]-padf.geometry.on_flow.destination[0])/(padf.geometry.on_flow.value*10)
-	# 		delta_y=(padf.geometry.on_flow.origin[1]-padf.geometry.on_flow.destination[1])/(padf.geometry.on_flow.value*10)
+	# normalize points
+	#
+	#
+	#
 
-	# 		padf.geometry.coordinates[0] += delta_x
-	# 		padf.geometry.coordinates[1] += delta_y
 
-	calc_new_point_position = (padfs)->
-		padf = padfs[0]
-		padf.geometry.coordinates[0] += padf.geometry.delta_x
-		padf.geometry.coordinates[1] += padf.geometry.delta_y
+
+	calc_new_point_position = (points)->
+		for point in points
+			point.geometry.coordinates[0] += point.geometry.delta_x
+			point.geometry.coordinates[1] += point.geometry.delta_y
+		return true
 
 
 
@@ -72,12 +80,12 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	map.on('load', ->
 		map.addSource('routes', {
 				"type": "geojson",
-				"data": flows_as_data
+				"data": flows
 		});
 		
 		map.addSource('points', {
 			"type": "geojson",
-			"data": points_as_data
+			"data": points
 		});
 
 
@@ -100,18 +108,21 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		});
 
 
-
-		animate = (counter, end)->
-			counter +=1
-#			calc_new_point_position( points_as_data.features )
-
-#			map.getSource('points').setData( points_as_data );
-
-			requestAnimationFrame(animate(counter,end)) if counter < end
+		`		
+		function animate(){
+			counter = counter + 1
+			calc_new_point_position( points.features )
+			map.getSource('points').setData( points );
+			if (counter < end) {
+				requestAnimationFrame(animate) 
+			}
+		}
+		`			
 
 
 		counter = 0;
-		animate(counter, 1000 );
+		end = 100
+		animate();
 	);
 )
 

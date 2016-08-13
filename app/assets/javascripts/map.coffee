@@ -8,6 +8,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	# //Kyiv
 	# 50°27′N 	30°31′E
 	kyiv = [30.445, 50.5166]
+	kdelta = 0.01
 
 	flows = 
 		"type": "FeatureCollection",
@@ -17,51 +18,75 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		"features": []		
 
 
-	max_dist = 0
 	max_value = 0
 
 	# create points and flows
 
 	for flow_data in flows_data
-		x = flow_data.origin.slice(0)
-		y = flow_data.destination.slice(0)
+		# o = flow_data.origin.slice(0)
+		# d = flow_data.destination.slice(0)
+
+		switch +flow_data.value
+			when +flow_data.value > 0
+				o = flow_data.origin.slice(0)
+				d = flow_data.destination.slice(0)
+			when +flow_data.value < 0
+				o = flow_data.destination.slice(0)
+				d = flow_data.origin.slice(0)
+			else
+				o = 0
+				d = 0
+
+
 		flows.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "LineString",
-				"coordinates": [ x, y ]
+				"coordinates": [ o, d ]
 			}
 		}
 
-		dist = (flow_data.destination[0]-flow_data.origin[0]) + (flow_data.destination[0]-flow_data.origin[0])
-		max_dist = dist if dist > max_dist
-		max_value = flow_data.value if flow_data.value > max_value
-		f_o = flow_data.origin.slice(0)
+
+		max_value = Math.abs(flow_data.value) if Math.abs(flow_data.value) > Math.abs(max_value)
+		c = flow_data.origin.slice(0)
 
 		points.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "Point",
-				coordinates: f_o,
-				on_flow: flow_data,
-				dist: dist,
-				delta_x: 0,
-				delta_y: 0
+				coordinates: c,
 			}
+			on_flow: {
+				origin: o,
+				destination: d
+			}
+			normalized_value: 0,
+			delta_x: 0,
+			delta_y: 0,
+			step: 0
 		}
 
-	# normalize points
-	#
-	#
-	#
+	# normalize flows and calculate deltas in points
+	for point_f in points.features
+		point_f.normalized_value = point_f.on_flow.value / max_value
 
+		point_f.delta_x = kdelta*( point_f.on_flow.destination[0] - point_f.on_flow.origin[0] )
+		point_f.delta_y = kdelta*( point_f.on_flow.destination[1] - point_f.on_flow.origin[1] )
 
-
-	calc_new_point_position = (points)->
-		for point in points
-			point.geometry.coordinates[0] += point.geometry.delta_x
-			point.geometry.coordinates[1] += point.geometry.delta_y
-		return true
+		`
+    calc_new_point_position = function(points_f) {
+			var i = points_f.length
+			while (i--){
+				if (points_f[i].step <= 1 / kdelta) {
+						points_f[i].geometry.coordinates[0] += points_f[i].delta_x;
+						points_f[i].geometry.coordinates[1] += points_f[i].delta_y;
+						points_f[i].step += 1;
+					} else {
+						points_f.splice( i, 1);
+					}
+			}
+		}
+		`
 
 
 
@@ -74,7 +99,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		style: 'mapbox://styles/mapbox/streets-v9'	    
 		#// starting position
 		center: kyiv,
-		zoom: 5
+		zoom: 7
 	})
 
 	map.on('load', ->
@@ -121,7 +146,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 
 
 		counter = 0;
-		end = 100
+		end = 1000
 		animate();
 	);
 )

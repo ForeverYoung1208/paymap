@@ -8,6 +8,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	# //Kyiv
 	# 50°27′N 	30°31′E
 	kyiv = [30.445, 50.5166]
+
+	# 1/speed
 	kdelta = 0.01
 
 	flows = 
@@ -20,17 +22,14 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 
 	max_value = 0
 
-	# create points and flows
+	# create points and flows for every flow_data
 
 	for flow_data in flows_data
-		# o = flow_data.origin.slice(0)
-		# d = flow_data.destination.slice(0)
-
-		switch +flow_data.value
-			when +flow_data.value > 0
+		switch true
+			when ( +flow_data.value > 0 )
 				o = flow_data.origin.slice(0)
 				d = flow_data.destination.slice(0)
-			when +flow_data.value < 0
+			when ( +flow_data.value < 0 )
 				o = flow_data.destination.slice(0)
 				d = flow_data.origin.slice(0)
 			else
@@ -38,58 +37,63 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 				d = 0
 
 
-		flows.features.push {
+		cf = flows.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "LineString",
 				"coordinates": [ o, d ]
 			}
+			value: flow_data.value ,			
+			normalized_value: 0,
+			step_to_spawn: 0,
+			step: 0
 		}
 
-
 		max_value = Math.abs(flow_data.value) if Math.abs(flow_data.value) > Math.abs(max_value)
-		c = flow_data.origin.slice(0)
 
 		points.features.push {
 			"type": "Feature",
 			"geometry": {
 				"type": "Point",
-				coordinates: c,
+				coordinates: o,
 			}
-			on_flow: {
-				origin: o,
-				destination: d
-			}
-			normalized_value: 0,
+			on_flow: flows.features[cf-1],
+			origin: o,
+			destination: d,
 			delta_x: 0,
 			delta_y: 0,
-			step: 0
+			step: 0,
 		}
 
-	# normalize flows and calculate deltas in points
+	# normalize flows
+	# calculate deltas in points
 	for point_f in points.features
-		point_f.normalized_value = point_f.on_flow.value / max_value
+		point_f.on_flow.normalized_value = (point_f.on_flow.value / max_value) * 100
+		point_f.delta_x = kdelta*( point_f.destination[0] - point_f.origin[0] )
+		point_f.delta_y = kdelta*( point_f.destination[1] - point_f.origin[1] )
 
-		point_f.delta_x = kdelta*( point_f.on_flow.destination[0] - point_f.on_flow.origin[0] )
-		point_f.delta_y = kdelta*( point_f.on_flow.destination[1] - point_f.on_flow.origin[1] )
 
-		`
-    calc_new_point_position = function(points_f) {
-			var i = points_f.length
-			while (i--){
-				if (points_f[i].step <= 1 / kdelta) {
-						points_f[i].geometry.coordinates[0] += points_f[i].delta_x;
-						points_f[i].geometry.coordinates[1] += points_f[i].delta_y;
-						points_f[i].step += 1;
-					} else {
-						points_f.splice( i, 1);
-					}
-			}
+	# calc new positions for points
+	`
+  calc_points_new_position = function(points_f) {
+		var i = points_f.length
+		while (i--){
+			if (points_f[i].step <= 1 / kdelta) {
+					points_f[i].geometry.coordinates[0] += points_f[i].delta_x;
+					points_f[i].geometry.coordinates[1] += points_f[i].delta_y;
+					points_f[i].step += 1;
+				} else {
+					points_f.splice( i, 1);
+				}
 		}
-		`
+	}
+	`
 
+	# function to check the necessity on spawning of new points
 
-
+	check_for_spawn = (flows_f) ->
+		for flow_f in flows_f
+			true
 
 	mapboxgl.accessToken = 'pk.eyJ1IjoiZm9yZXZlcnlvdW5nMTIwOCIsImEiOiJjaXJodnd1bHYwMDRjajFtNWU5aDZrMDk1In0.4Q1TtVizWiiiu6oUPL2mhw'
 	map = new mapboxgl.Map({
@@ -99,7 +103,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		style: 'mapbox://styles/mapbox/streets-v9'	    
 		#// starting position
 		center: kyiv,
-		zoom: 7
+		zoom: 5
 	})
 
 	map.on('load', ->
@@ -136,7 +140,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		`		
 		function animate(){
 			counter = counter + 1
-			calc_new_point_position( points.features )
+			calc_points_new_position( points.features )
+			check_for_spawn( flows.features )
 			map.getSource('points').setData( points );
 			if (counter < end) {
 				requestAnimationFrame(animate) 

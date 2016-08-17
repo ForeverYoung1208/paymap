@@ -12,7 +12,7 @@
 //
 //= require jquery
 //= require jquery_ujs
-//= require turbolinks
+// NOT = require turbolinks
 // NOT = require angular/angular.min
 // NOT = require angular-resource/angular-resource
 //= require transferts

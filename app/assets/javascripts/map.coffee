@@ -26,9 +26,13 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	points =
 		"type": "FeatureCollection",
 		"features": []		
+	dots =
+		"type": "FeatureCollection",
+		"features": []		
 
 
 	max_value = 0
+	max_dot_value = 0
 
 	# create points and flows for every flow_data
 
@@ -77,7 +81,27 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			destination: d,
 			delta_x: d_x,
 			delta_y: d_y,
-			step: 0,
+			step: 0
+		}
+
+		#create dots (ends of lines)
+		dots.features.push {
+			"type": "Feature",
+			"geometry": {
+				"type": "Point",
+				coordinates: flow_data.origin.slice(0),
+			},
+			dot_value: -flow_data.value,
+			size: 0
+		}
+
+		dots.features.push {
+			"type": "Feature",
+			"geometry": {
+				"type": "Point",
+				coordinates: flow_data.destination.slice(0),
+			}
+			dot_value: +flow_data.value			
 		}
 
 	# normalize flows
@@ -85,6 +109,49 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		point_f.on_flow.normalized_value = Math.abs(point_f.on_flow.value / max_value) * normal_spread
 		point_f.on_flow.steps_to_spawn = kspawn * 1 / point_f.on_flow.normalized_value 
 
+
+	#sum and remove identical dots, find absolute maximum dot value
+	`
+	var i = points.features.length
+	while (i--){
+		if ( Math.abs(points.features[i].dot_value) > Math.abs(max_dot_value) ) { max_dot_value = Math.abs(points.features[i].dot_value) }   
+    for (j = 0; j < i; j++) {
+    	if ((points.features[j].geometry.coordinates[0] == points.features[i].geometry.coordinates[0])&&(points.features[j].geometry.coordinates[1] == points.features[i].geometry.coordinates[1]))	{
+    		points.features[j].dot_value += points.features[i].dot_value;
+    		points.features.splice( i, 1);
+    		break;
+    	}
+    }
+	}
+
+	`
+
+	# set dot size in percent according to normalized dot_value
+
+	for dot_f in dots.features
+		switch true
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.1
+				dot_f.size = 0
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.2
+				dot_f.size = 10
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.3
+				dot_f.size = 20
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.4
+				dot_f.size = 30
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.5
+				dot_f.size = 40
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.6
+				dot_f.size = 50
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.7
+				dot_f.size = 60
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.8
+				dot_f.size = 70
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.9
+				dot_f.size = 80
+			when Math.abs( dot_f.dot_value / max_dot_value ) < 1
+				dot_f.size = 90
+			when Math.abs( dot_f.dot_value / max_dot_value ) == 1
+				dot_f.size = 100
 
 
 
@@ -168,6 +235,13 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"cluster": false
 		});
 
+		map.addSource('dots', {
+			"type": "geojson",
+			"data": dots,
+			"cluster": false
+		});
+
+
 
 		map.addLayer({
 			"id": "routes_layer",
@@ -185,6 +259,31 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"layout": {
 					"icon-image": "bank-11",
 					"icon-allow-overlap": true					
+			}
+		});
+
+		map.addLayer({
+			"id": "dots_layer",
+			"source": "dots",
+			"type": "circle",
+			"paint": {
+					"circle-radius": {
+						"property": "size"
+						"stops":[
+							[0, 2],
+							[10, 4],
+							[20, 6],
+							[30, 8],
+							[40, 10],
+							[50, 12],
+							[60, 14],
+							[70, 16],
+							[80, 18],
+							[90, 20],
+							[100, 22],
+						]
+					}
+					"circle-color": "#007cbf"
 			}
 		});
 

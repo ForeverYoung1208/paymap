@@ -164,7 +164,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		
 		map.addSource('points', {
 			"type": "geojson",
-			"data": points
+			"data": points,
+			"cluster": false
 		});
 
 
@@ -182,7 +183,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"source": "points",
 			"type": "symbol",
 			"layout": {
-					"icon-image": "bank-11"
+					"icon-image": "bank-11",
+					"icon-allow-overlap": true					
 			}
 		});
 

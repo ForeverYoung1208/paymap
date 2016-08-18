@@ -13,11 +13,11 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	# (smoothness of animation) kdelta = 0.005  500 steps(frames) from origin to destination
 	kdelta = 0.002
 
-	# 1/(how often points will spawm) ( kspawn = 500  every 500 frame for flow value = 1) 
+	# 1/(how often points will spawm) ( kspawn = 500  will spawm point every 500 frame for flow value = 1) 
 	kspawn = 500
 
 	# spread of flow values from 0 to normal_spread
-	normal_spread = 50
+	normal_spread = 20
 
 
 	flows = 
@@ -81,7 +81,6 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		}
 
 	# normalize flows
-	# calculate deltas in points
 	for point_f in points.features
 		point_f.on_flow.normalized_value = Math.abs(point_f.on_flow.value / max_value) * normal_spread
 		point_f.on_flow.steps_to_spawn = kspawn * 1 / point_f.on_flow.normalized_value 
@@ -154,7 +153,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		style: 'mapbox://styles/mapbox/streets-v9'	    
 		#// starting position
 		center: kyiv,
-		zoom: 5
+		zoom: 7
 	})
 
 	map.on('load', ->

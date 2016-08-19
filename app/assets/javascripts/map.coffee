@@ -92,7 +92,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 				coordinates: flow_data.origin.slice(0),
 			},
 			dot_value: -flow_data.value,
-			size: 0
+			"size": 0
 		}
 
 		dots.features.push {
@@ -101,7 +101,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 				"type": "Point",
 				coordinates: flow_data.destination.slice(0),
 			}
-			dot_value: +flow_data.value			
+			dot_value: +flow_data.value,
+			"size": 0
 		}
 
 	# normalize flows
@@ -112,13 +113,13 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 
 	#sum and remove identical dots, find absolute maximum dot value
 	`
-	var i = points.features.length
+	var i = dots.features.length
 	while (i--){
-		if ( Math.abs(points.features[i].dot_value) > Math.abs(max_dot_value) ) { max_dot_value = Math.abs(points.features[i].dot_value) }   
+		if ( Math.abs(dots.features[i].dot_value) > Math.abs(max_dot_value) ) { max_dot_value = Math.abs(dots.features[i].dot_value) }   
     for (j = 0; j < i; j++) {
-    	if ((points.features[j].geometry.coordinates[0] == points.features[i].geometry.coordinates[0])&&(points.features[j].geometry.coordinates[1] == points.features[i].geometry.coordinates[1]))	{
-    		points.features[j].dot_value += points.features[i].dot_value;
-    		points.features.splice( i, 1);
+    	if ((dots.features[j].geometry.coordinates[0] == dots.features[i].geometry.coordinates[0])&&(dots.features[j].geometry.coordinates[1] == dots.features[i].geometry.coordinates[1]))	{
+    		dots.features[j].dot_value += dots.features[i].dot_value;
+    		dots.features.splice( i, 1);
     		break;
     	}
     }
@@ -268,22 +269,37 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"type": "circle",
 			"paint": {
 					"circle-radius": {
-						"property": "size"
+						"property": "size",
 						"stops":[
-							[0, 2],
-							[10, 4],
-							[20, 6],
-							[30, 8],
-							[40, 10],
-							[50, 12],
-							[60, 14],
-							[70, 16],
-							[80, 18],
-							[90, 20],
-							[100, 22],
+							[ 0, 4],
+							[10, 6],
+							[20, 8],
+							[30, 10],
+							[40, 12],
+							[50, 14],
+							[60, 16],
+							[70, 18],
+							[80, 20],
+							[90, 22],
+							[100, 24],
+						]
+					},
+					"circle-color": {
+						"property": "size",
+						"stops":[
+							[ 0, "#007cbf"],
+							[10, "#107cbf"],
+							[20, "#207cbf"],
+							[30, "#307cbf"],
+							[40, "#407cbf"],
+							[50, "#507cbf"],
+							[60, "#607cbf"],
+							[70, "#707cbf"],
+							[80, "#807cbf"],
+							[90, "#907cbf"],
+							[100, "#A07cbf"],
 						]
 					}
-					"circle-color": "#007cbf"
 			}
 		});
 

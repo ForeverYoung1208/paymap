@@ -28,7 +28,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 		"features": []		
 	dots =
 		"type": "FeatureCollection",
-		"features": []		
+		"features": []
 
 
 	max_value = 0
@@ -92,7 +92,11 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 				coordinates: flow_data.origin.slice(0),
 			},
 			dot_value: -flow_data.value,
-			"size": 0
+			properties: {
+				"message": "",
+				"iconSize": 0,
+				"iconColor": 0
+			}
 		}
 
 		dots.features.push {
@@ -100,9 +104,13 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"geometry": {
 				"type": "Point",
 				coordinates: flow_data.destination.slice(0),
-			}
+			},
 			dot_value: +flow_data.value,
-			"size": 0
+			properties: {
+				"message": "",
+				"iconSize": 0,
+				"iconColor": 0
+			}
 		}
 
 	# normalize flows
@@ -116,13 +124,13 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	var i = dots.features.length
 	while (i--){
 		if ( Math.abs(dots.features[i].dot_value) > Math.abs(max_dot_value) ) { max_dot_value = Math.abs(dots.features[i].dot_value) }   
-    for (j = 0; j < i; j++) {
-    	if ((dots.features[j].geometry.coordinates[0] == dots.features[i].geometry.coordinates[0])&&(dots.features[j].geometry.coordinates[1] == dots.features[i].geometry.coordinates[1]))	{
-    		dots.features[j].dot_value += dots.features[i].dot_value;
-    		dots.features.splice( i, 1);
-    		break;
-    	}
-    }
+		for (j = 0; j < i; j++) {
+			if ((dots.features[j].geometry.coordinates[0] == dots.features[i].geometry.coordinates[0])&&(dots.features[j].geometry.coordinates[1] == dots.features[i].geometry.coordinates[1]))	{
+				dots.features[j].dot_value += dots.features[i].dot_value;
+				dots.features.splice( i, 1);
+				break;
+			}
+		}
 	}
 
 	`
@@ -130,35 +138,40 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	# set dot size in percent according to normalized dot_value
 
 	for dot_f in dots.features
+		dot_f.properties.message = ' ' + dot_f.dot_value + ' грн.'
+
+		if dot_f.dot_value <= 0
+			dot_f.properties.iconColor = 1
+
 		switch true
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.1
-				dot_f.size = 0
+				dot_f.properties.iconSize = 0
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.2
-				dot_f.size = 10
+				dot_f.properties.iconSize = 10
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.3
-				dot_f.size = 20
+				dot_f.properties.iconSize = 20
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.4
-				dot_f.size = 30
+				dot_f.properties.iconSize = 30
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.5
-				dot_f.size = 40
+				dot_f.properties.iconSize = 40
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.6
-				dot_f.size = 50
+				dot_f.properties.iconSize = 50
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.7
-				dot_f.size = 60
+				dot_f.properties.iconSize = 60
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.8
-				dot_f.size = 70
+				dot_f.properties.iconSize = 70
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 0.9
-				dot_f.size = 80
+				dot_f.properties.iconSize = 80
 			when Math.abs( dot_f.dot_value / max_dot_value ) < 1
-				dot_f.size = 90
+				dot_f.properties.iconSize = 90
 			when Math.abs( dot_f.dot_value / max_dot_value ) == 1
-				dot_f.size = 100
+				dot_f.properties.iconSize = 100
 
 
 
 	# calc new positions for points
 	`
-  calc_points_new_position = function(points_f) {
+	calc_points_new_position = function(points_f) {
 		var i = points_f.length
 		while (i--){
 			if (points_f[i].step <= 1 / kdelta) {
@@ -242,6 +255,11 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"cluster": false
 		});
 
+		map.addSource('labels', {
+			"type": "geojson",
+			"data": dots,
+			"cluster": false
+		});
 
 
 		map.addLayer({
@@ -269,39 +287,44 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 			"type": "circle",
 			"paint": {
 					"circle-radius": {
-						"property": "size",
+						"property": "iconSize",
 						"stops":[
-							[ 0, 4],
-							[10, 6],
-							[20, 8],
-							[30, 10],
-							[40, 12],
-							[50, 14],
-							[60, 16],
-							[70, 18],
-							[80, 20],
-							[90, 22],
-							[100, 24],
+							[0,  6],
+							[10, 10],
+							[20, 12],
+							[30, 14],
+							[40, 16],
+							[50, 18],
+							[60, 20],
+							[70, 22],
+							[80, 24],
+							[90, 26],
+							[100, 28]
 						]
 					},
 					"circle-color": {
-						"property": "size",
+						"property": "iconColor",
 						"stops":[
-							[ 0, "#007cbf"],
-							[10, "#107cbf"],
-							[20, "#207cbf"],
-							[30, "#307cbf"],
-							[40, "#407cbf"],
-							[50, "#507cbf"],
-							[60, "#607cbf"],
-							[70, "#707cbf"],
-							[80, "#807cbf"],
-							[90, "#907cbf"],
-							[100, "#A07cbf"],
+							[0, "#8888ff"],
+							[1, "#00ff00"]
 						]
 					}
 			}
 		});
+
+		map.addLayer({
+			"id": "label_layer",
+			"source": "dots",
+			"type": "symbol",
+			"layout": {
+				"icon-allow-overlap": true,
+				"text-field": "{message}",
+				"text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+				"text-size": 11,
+#				"text-transform": "uppercase",
+				"text-letter-spacing": 0.05					
+			}
+		});		
 
 
 		`		

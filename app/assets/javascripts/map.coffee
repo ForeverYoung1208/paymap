@@ -13,6 +13,8 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	# (smoothness of animation) kdelta = 0.005  500 steps(frames) from origin to destination
 	kdelta = 0.002
 
+	ankdelta = 1 / kdelta
+
 	# 1/(how often points will spawm) ( kspawn = 500  will spawm point every 500 frame for flow value = 1) 
 	kspawn = 500
 
@@ -174,7 +176,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 	calc_points_new_position = function(points_f) {
 		var i = points_f.length
 		while (i--){
-			if (points_f[i].step <= 1 / kdelta) {
+			if (points_f[i].step <= ankdelta) {
 					points_f[i].geometry.coordinates[0] += points_f[i].delta_x;
 					points_f[i].geometry.coordinates[1] += points_f[i].delta_y;
 					points_f[i].step += 1;
@@ -341,7 +343,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 
 
 		counter = 0;
-		end = 5000
+		end = 5000;
 		animate();
 	);
 )

@@ -11,7 +11,7 @@ $.get('/transferts.json', {dataType: 'json'}, (data)->
 
 	# 1/(how many steps from origin to destination)
 	# (smoothness of animation) kdelta = 0.005  500 steps(frames) from origin to destination
-	kdelta = 0.002
+	kdelta = 0.005
 
 	ankdelta = 1 / kdelta
 
